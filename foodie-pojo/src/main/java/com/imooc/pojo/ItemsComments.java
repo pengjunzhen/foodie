@@ -18,20 +18,26 @@ public class ItemsComments {
     /**
      * id主键
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 用户id 用户名须脱敏
      */
     @TableField(value = "user_id")
-    private Long userId;
+    private String userId;
 
     /**
      * 商品id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
+
+    /**
+     * 商品 code
+     */
+    @TableField(value = "item_code")
+    private String itemCode;
 
     /**
      * 商品名称
@@ -43,7 +49,7 @@ public class ItemsComments {
      * 商品规格id 可为空
      */
     @TableField(value = "item_spec_id")
-    private Long itemSpecId;
+    private String itemSpecId;
 
     /**
      * 规格名称 可为空

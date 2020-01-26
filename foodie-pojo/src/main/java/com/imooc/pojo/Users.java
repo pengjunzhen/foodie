@@ -17,8 +17,8 @@ public class Users {
     /**
      * 主键id 用户id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId
+    private String id;
 
     /**
      * 用户名

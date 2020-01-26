@@ -12,20 +12,20 @@ public class OrderItems {
     /**
      * 主键id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 归属订单id
      */
     @TableField(value = "order_id")
-    private Long orderId;
+    private String orderId;
 
     /**
      * 商品id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
 
     /**
      * 商品图片

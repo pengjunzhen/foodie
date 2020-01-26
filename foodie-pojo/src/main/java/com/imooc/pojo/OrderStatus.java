@@ -12,15 +12,14 @@ import java.util.Date;
 @TableName(value = "order_status")
 public class OrderStatus {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
 
     /**
      * 订单ID 对应订单表的主键id
      */
 
+    @TableId(type = IdType.AUTO)
     @TableField(value = "order_id")
-    private Long orderId;
+    private String orderId;
 
     /**
      * 订单状态

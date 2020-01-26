@@ -17,8 +17,8 @@ public class Carousel {
     /**
      * 主键
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 图片 图片地址
@@ -36,13 +36,13 @@ public class Carousel {
      * 商品id 商品id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
 
     /**
      * 商品分类id 商品分类id
      */
     @TableField(value = "cat_id")
-    private Long catId;
+    private String catId;
 
     /**
      * 轮播图类型 轮播图类型，用于判断，可以根据商品id或者分类进行页面跳转，1：商品 2：分类

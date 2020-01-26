@@ -16,6 +16,12 @@ public class Items {
     private Long id;
 
     /**
+     * 商品 code
+     */
+    @TableField(value = "item_code")
+    private String itemCode;
+
+    /**
      * 商品名称 商品名称
      */
     @TableField(value = "item_name")

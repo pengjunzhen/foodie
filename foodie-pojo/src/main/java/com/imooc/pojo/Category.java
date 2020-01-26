@@ -13,7 +13,7 @@ public class Category {
      * 主键 分类id主键
      */
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Integer id;
 
     /**
      * 分类名称 分类名称

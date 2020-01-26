@@ -17,19 +17,14 @@ public class Orders {
     /**
      * 订单主键 同时也是订单编号
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
-
-    /**
-     * 流水号
-     */
-    private String code;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 用户id
      */
     @TableField(value = "user_id")
-    private Long userId;
+    private String userId;
 
     /**
      * 收货人快照

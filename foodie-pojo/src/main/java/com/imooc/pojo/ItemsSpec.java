@@ -15,14 +15,14 @@ public class ItemsSpec {
     /**
      * 商品规格id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 商品外键id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
 
     /**
      * 规格名称

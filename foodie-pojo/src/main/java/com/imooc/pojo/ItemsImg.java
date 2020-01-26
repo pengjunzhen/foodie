@@ -14,14 +14,14 @@ public class ItemsImg {
     /**
      * 图片主键
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 商品外键id 商品外键id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
 
     /**
      * 图片地址 图片地址

@@ -17,14 +17,14 @@ public class UserAddress {
     /**
      * 地址主键id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 关联用户id
      */
     @TableField(value = "user_id")
-    private Long userId;
+    private String userId;
 
     /**
      * 收件人姓名

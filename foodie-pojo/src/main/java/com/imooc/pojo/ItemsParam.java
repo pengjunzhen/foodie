@@ -14,14 +14,14 @@ public class ItemsParam {
     /**
      * 商品参数id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 商品外键id
      */
     @TableField(value = "item_id")
-    private Long itemId;
+    private String itemId;
 
     /**
      * 产地 产地，例：中国江苏
