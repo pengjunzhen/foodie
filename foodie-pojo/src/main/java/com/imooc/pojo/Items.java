@@ -12,14 +12,8 @@ public class Items {
     /**
      * 商品主键id
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
-
-    /**
-     * 商品 code
-     */
-    @TableField(value = "item_code")
-    private String itemCode;
+    @TableId(type = IdType.NONE)
+    private String id;
 
     /**
      * 商品名称 商品名称
