@@ -2,14 +2,10 @@ package com.imooc.service.impl;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.imooc.mapper.ItemsImgMapper;
-import com.imooc.mapper.ItemsMapper;
-import com.imooc.mapper.ItemsParamMapper;
-import com.imooc.mapper.ItemsSpecMapper;
-import com.imooc.pojo.Items;
-import com.imooc.pojo.ItemsImg;
-import com.imooc.pojo.ItemsParam;
-import com.imooc.pojo.ItemsSpec;
+import com.imooc.enums.CommentLevel;
+import com.imooc.mapper.*;
+import com.imooc.pojo.*;
+import com.imooc.pojo.vo.CommentLevelCountsVO;
 import com.imooc.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +30,8 @@ public class ItemServiceImpl implements ItemService {
     private ItemsSpecMapper itemsSpecMapper;
     @Autowired
     private ItemsParamMapper itemsParamMapper;
+    @Autowired
+    private ItemsCommentsMapper itemsCommentsMapper;
 
     @Transactional(propagation = Propagation.SUPPORTS)
     @Override
@@ -66,4 +64,30 @@ public class ItemServiceImpl implements ItemService {
 
         return itemsParamMapper.selectOne(queryWrapper);
     }
+
+    @Override
+    public CommentLevelCountsVO queryCommentCounts(String itemId) {
+
+        Integer goodCounts = getCommentCounts(itemId, CommentLevel.GOOD.type);
+        Integer normalCounts = getCommentCounts(itemId, CommentLevel.NORMAL.type);
+        Integer badCounts = getCommentCounts(itemId, CommentLevel.BAD.type);
+
+        CommentLevelCountsVO countsVO = new CommentLevelCountsVO();
+        countsVO.setGoodCounts(goodCounts);
+        countsVO.setNormalCounts(normalCounts);
+        countsVO.setBadCounts(badCounts);
+        countsVO.setTotalCounts(goodCounts + normalCounts + badCounts);
+
+        return countsVO;
+    }
+
+    private Integer getCommentCounts(String itemId, Integer level) {
+        QueryWrapper<ItemsComments> condition = new QueryWrapper<>();
+        condition.eq("item_id", itemId);
+        if (level != null) {
+            condition.eq("comment_level", level);
+        }
+        return itemsCommentsMapper.selectCount(condition);
+    }
+
 }
