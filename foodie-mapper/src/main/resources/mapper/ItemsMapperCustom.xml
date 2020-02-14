@@ -22,4 +22,46 @@
                 and ic.comment_level = #{paramsMap.level}
             </if>
     </select>
+
+    <!-- k: 默认，代表默认排序，根据name-->
+    <!-- c: 根据销量排序-->
+    <!-- p: 根据价格排序-->
+    <select id="searchItems" parameterType="java.util.Map" resultType="com.imooc.pojo.vo.SearchItemsVO">
+        select
+            items.id as itemId,
+            items.item_name as itemName,
+            items.sell_counts as sellCounts,
+            items_img.url as imgUrl,
+            tmpSpec.price_discount as price
+        from
+            items
+        left join
+            items_img
+        on
+            items.id = items_img.item_id
+        left join
+            (
+                select item_id, MIN(price_discount) as price_discount
+                from items_spec group by item_id
+            ) as tmpSpec
+        on
+            items.id = tmpSpec.item_id
+        where
+            items_img.is_main = 1
+            <if test=" paramsMap.keywords != null and paramsMap.keywords != '' ">
+                AND items.item_name like '%${paramsMap.keywords}%'
+            </if>
+            order by
+            <choose>
+                <when test=" paramsMap.sort == &quot;c&quot; ">
+                    items.sell_counts desc
+                </when>
+                <when test=" paramsMap.sort == &quot;p&quot; ">
+                    tmpSpec.price_discount asc
+                </when>
+                <otherwise>
+                    items.item_name asc
+                </otherwise>
+            </choose>
+    </select>
 </mapper>
