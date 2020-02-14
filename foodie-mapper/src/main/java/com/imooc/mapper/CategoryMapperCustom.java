@@ -2,6 +2,7 @@ package com.imooc.mapper;
 
 import com.imooc.pojo.vo.CategoryVO;
 import com.imooc.pojo.vo.NewItemsVO;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Map;
  * @description 自定义的分类mapper
  * @date 2020/1/26 17:18
  */
+@Repository
 public interface CategoryMapperCustom {
 
     /**

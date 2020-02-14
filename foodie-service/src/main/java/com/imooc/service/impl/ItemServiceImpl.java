@@ -2,17 +2,23 @@ package com.imooc.service.impl;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.imooc.enums.CommentLevel;
 import com.imooc.mapper.*;
 import com.imooc.pojo.*;
 import com.imooc.pojo.vo.CommentLevelCountsVO;
+import com.imooc.pojo.vo.ItemCommentVO;
 import com.imooc.service.ItemService;
+import com.imooc.utils.PagedGridResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author pengjunzhen
@@ -32,6 +38,8 @@ public class ItemServiceImpl implements ItemService {
     private ItemsParamMapper itemsParamMapper;
     @Autowired
     private ItemsCommentsMapper itemsCommentsMapper;
+    @Autowired
+    private ItemsMapperCustom itemsMapperCustom;
 
     @Transactional(propagation = Propagation.SUPPORTS)
     @Override
@@ -65,6 +73,40 @@ public class ItemServiceImpl implements ItemService {
         return itemsParamMapper.selectOne(queryWrapper);
     }
 
+    /**
+     * 根据商品id查询商品的评价（分页）
+     * @param itemId
+     * @param level
+     * @return
+     */
+    @Transactional(propagation = Propagation.SUPPORTS)
+    @Override
+    public PagedGridResult queryPagedComments(String itemId, Integer level,
+                                                  Integer page, Integer pageSize) {
+        Map<String, Object> map = new HashMap<>(16);
+        map.put("itemId", itemId);
+        map.put("level", level);
+
+        /** page: 第几页
+         *  pageSize: 每页显示条数
+         */
+        PageHelper.startPage(page, pageSize);
+        List<ItemCommentVO> list = itemsMapperCustom.queryItemComments(map);
+        PagedGridResult grid = setterPagedGrid(list, page);
+        return grid;
+    }
+
+    private PagedGridResult setterPagedGrid(List<?> list, Integer page ) {
+        PageInfo<?> pageList = new PageInfo<>(list);
+        PagedGridResult grid = new PagedGridResult();
+        grid.setPage(page);
+        grid.setRows(list);
+        grid.setTotal(pageList.getPages());
+        grid.setRecords(pageList.getTotal());
+        return grid;
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS)
     @Override
     public CommentLevelCountsVO queryCommentCounts(String itemId) {
 
