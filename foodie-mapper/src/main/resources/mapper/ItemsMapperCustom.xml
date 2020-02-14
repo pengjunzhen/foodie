@@ -64,4 +64,42 @@
                 </otherwise>
             </choose>
     </select>
+
+    <select id="searchItemsByThirdCat" parameterType="java.util.Map" resultType="com.imooc.pojo.vo.SearchItemsVO">
+        select
+        items.id as itemId,
+        items.item_name as itemName,
+        items.sell_counts as sellCounts,
+        items_img.url as imgUrl,
+        tmpSpec.price_discount as price
+        from
+        items
+        left join
+        items_img
+        on
+        items.id = items_img.item_id
+        left join
+        (
+        select item_id, MIN(price_discount) as price_discount
+        from items_spec group by item_id
+        ) as tmpSpec
+        on
+        items.id = tmpSpec.item_id
+        where
+            items_img.is_main = 1
+        and
+            items.cat_id = #{paramsMap.catId}
+        order by
+        <choose>
+            <when test=" paramsMap.sort == &quot;c&quot; ">
+                items.sell_counts desc
+            </when>
+            <when test=" paramsMap.sort == &quot;p&quot; ">
+                tmpSpec.price_discount asc
+            </when>
+            <otherwise>
+                items.item_name asc
+            </otherwise>
+        </choose>
+    </select>
 </mapper>
