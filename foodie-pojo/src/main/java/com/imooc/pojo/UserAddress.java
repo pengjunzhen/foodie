@@ -65,7 +65,7 @@ public class UserAddress {
      * 是否默认地址 1:是  0:否
      */
     @TableField(value = "is_default")
-    private Integer defaulted;
+    private Integer isDefault;
 
     /**
      * 创建时间

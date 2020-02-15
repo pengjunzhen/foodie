@@ -126,7 +126,7 @@
             t_items_img.is_main = 1
         AND
             t_items_spec.id IN
-            <foreach collection="paramList" index="index" item="specId" open="(" separator="," close=")">
+            <foreach collection="paramsList" index="index" item="specId" open="(" separator="," close=")">
                 #{specId}
             </foreach>
     </select>
