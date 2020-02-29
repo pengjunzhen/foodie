@@ -83,13 +83,13 @@ public class Orders {
      * 买家是否评价 1：已评价，0：未评价
      */
     @TableField(value = "is_comment")
-    private Integer commented;
+    private Integer isComment;
 
     /**
      * 逻辑删除状态 1: 删除 0:未删除
      */
     @TableField(value = "is_delete")
-    private Integer deleted;
+    private Integer isDelete;
 
     /**
      * 创建时间（成交时间）

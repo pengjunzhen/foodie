@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.imooc.enums.CommentLevel;
+import com.imooc.enums.YesOrNo;
 import com.imooc.mapper.*;
 import com.imooc.pojo.*;
 import com.imooc.pojo.vo.CommentLevelCountsVO;
@@ -42,13 +43,13 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private ItemsMapperCustom itemsMapperCustom;
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public Items queryItemById(String itemId) {
         return itemsMapper.selectById(itemId);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public List<ItemsImg> queryItemImgList(String itemId) {
         QueryWrapper<ItemsImg> queryWrapper = new QueryWrapper();
@@ -57,7 +58,7 @@ public class ItemServiceImpl implements ItemService {
         return itemsImgMapper.selectList(queryWrapper);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public List<ItemsSpec> queryItemSpecList(String itemId) {
         QueryWrapper<ItemsSpec> queryWrapper = new QueryWrapper<>();
@@ -65,7 +66,7 @@ public class ItemServiceImpl implements ItemService {
         return itemsSpecMapper.selectList(queryWrapper);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public ItemsParam queryItemParam(String itemId) {
         QueryWrapper<ItemsParam> queryWrapper = new QueryWrapper<>();
@@ -80,7 +81,7 @@ public class ItemServiceImpl implements ItemService {
      * @param level
      * @return
      */
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public PagedGridResult queryPagedComments(String itemId, Integer level,
                                                   Integer page, Integer pageSize) {
@@ -96,8 +97,7 @@ public class ItemServiceImpl implements ItemService {
         for (ItemCommentVO itemCommentVO : list) {
             itemCommentVO.setNickname(DesensitizationUtil.commonDisplay(itemCommentVO.getNickname()));
         }
-        PagedGridResult grid = setterPagedGrid(list, page);
-        return grid;
+        return setterPagedGrid(list, page);
     }
 
     private PagedGridResult setterPagedGrid(List<?> list, Integer page ) {
@@ -110,7 +110,7 @@ public class ItemServiceImpl implements ItemService {
         return grid;
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public CommentLevelCountsVO queryCommentCounts(String itemId) {
 
@@ -127,7 +127,7 @@ public class ItemServiceImpl implements ItemService {
         return countsVO;
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public PagedGridResult searchItems(String keywords, String sort, Integer page, Integer pageSize) {
         Map<String, Object> map = new HashMap<>(16);
@@ -140,7 +140,50 @@ public class ItemServiceImpl implements ItemService {
         return setterPagedGrid(list, page);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
+    @Override
+    public String queryItemMainImgById(String itemId) {
+        QueryWrapper<ItemsImg> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("item_id", itemId);
+        queryWrapper.eq("is_main", YesOrNo.YES.type);
+        ItemsImg result = itemsImgMapper.selectOne(queryWrapper);
+        return result != null ? result.getUrl() : "";
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    @Override
+    public void decreaseItemSpecStock(String itemSpecId, int buyCounts) {
+        // synchronized 不推荐使用，集群下无用，性能低下
+        // 锁数据库: 不推荐，导致数据库性能低下
+        // 分布式锁 zookeeper redis
+
+        // lockUtil.getLock(); -- 加锁
+
+        // 1. 查询库存
+//        int stock = 10;
+
+        // 2. 判断库存，是否能够减少到0以下
+//        if (stock - buyCounts < 0) {
+        // 提示用户库存不够
+//            10 - 3 -3 - 5 = -1
+//        }
+
+        // lockUtil.unLock(); -- 解锁
+
+
+        int result = itemsMapperCustom.decreaseItemSpecStock(itemSpecId, buyCounts);
+        if (result != 1) {
+            throw new RuntimeException("订单创建失败，原因：库存不足!");
+        }
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
+    @Override
+    public ItemsSpec queryItemSpecById(String itemSpecId) {
+        return itemsSpecMapper.selectById(itemSpecId);
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public List<ShopCartVO> queryItemsBySpecIds(String itemSpecIds) {
         String[] ids = itemSpecIds.split(",");
@@ -149,7 +192,7 @@ public class ItemServiceImpl implements ItemService {
         return itemsMapperCustom.queryItemsBySpecIds(specIdsList);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
     @Override
     public PagedGridResult searchItems(Integer catId, String sort, Integer page, Integer pageSize) {
         Map<String, Object> map = new HashMap<>();
