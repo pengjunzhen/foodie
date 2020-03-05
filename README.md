@@ -30,7 +30,7 @@ foodie
 | MyBatis-Plus | Mybatis增强 | https://mp.baomidou.com/ |
 | Lombok    | 简化对象封装工具      | https://github.com/rzwitserloot/lombok     |
 
-### 后端技术
+### 前端技术
 | 技术 | 说明 | 官网 |
 | :---: | :----: | :---: |
 | Vue | 前端框架 | 	https://vuejs.org/ |
