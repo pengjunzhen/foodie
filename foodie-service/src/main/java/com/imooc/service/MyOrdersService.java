@@ -1,5 +1,6 @@
 package com.imooc.service;
 
+import com.imooc.pojo.Orders;
 import com.imooc.utils.PagedGridResult;
 
 /**
@@ -21,4 +22,32 @@ public interface MyOrdersService {
                                   Integer orderStatus,
                                   Integer page,
                                   Integer pageSize);
+
+    /**
+     * 更新订单状态为已发货
+     * @param orderId 订单id
+     */
+    Boolean updateDeliverOrderStatus(String orderId);
+
+    /**
+     * 查询我的订单
+     * @param userId 用户id
+     * @param orderId 订单id
+     * @return Orders
+     */
+    Orders queryMyOrder(String userId, String orderId);
+
+    /**
+     * 更新订单状态 —> 确认收货
+     * @return boolean
+     */
+    boolean updateReceiveOrderStatus(String orderId);
+
+    /**
+     * 删除订单（逻辑删除）
+     * @param userId 用户id
+     * @param orderId 订单id
+     * @return boolean
+     */
+    boolean deleteOrder(String userId, String orderId);
 }
