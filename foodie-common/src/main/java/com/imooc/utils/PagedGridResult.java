@@ -1,5 +1,6 @@
 package com.imooc.utils;
 
+import com.github.pagehelper.PageInfo;
 import lombok.Data;
 
 import java.util.List;
@@ -28,4 +29,14 @@ public class PagedGridResult {
      * 每行显示的内容
      */
     private List<?> rows;
+
+    public static PagedGridResult setterPagedGrid(List<?> list, Integer page ) {
+        PageInfo<?> pageList = new PageInfo<>(list);
+        PagedGridResult grid = new PagedGridResult();
+        grid.setPage(page);
+        grid.setRows(list);
+        grid.setTotal(pageList.getPages());
+        grid.setRecords(pageList.getTotal());
+        return grid;
+    }
 }

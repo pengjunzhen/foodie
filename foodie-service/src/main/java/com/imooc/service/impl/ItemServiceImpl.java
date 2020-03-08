@@ -97,17 +97,7 @@ public class ItemServiceImpl implements ItemService {
         for (ItemCommentVO itemCommentVO : list) {
             itemCommentVO.setNickname(DesensitizationUtil.commonDisplay(itemCommentVO.getNickname()));
         }
-        return setterPagedGrid(list, page);
-    }
-
-    private PagedGridResult setterPagedGrid(List<?> list, Integer page ) {
-        PageInfo<?> pageList = new PageInfo<>(list);
-        PagedGridResult grid = new PagedGridResult();
-        grid.setPage(page);
-        grid.setRows(list);
-        grid.setTotal(pageList.getPages());
-        grid.setRecords(pageList.getTotal());
-        return grid;
+        return PagedGridResult.setterPagedGrid(list, page);
     }
 
     @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
@@ -137,7 +127,7 @@ public class ItemServiceImpl implements ItemService {
         PageHelper.startPage(page, pageSize);
         List<SearchItemsVO> list = itemsMapperCustom.searchItems(map);
 
-        return setterPagedGrid(list, page);
+        return PagedGridResult.setterPagedGrid(list, page);
     }
 
     @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
@@ -202,7 +192,7 @@ public class ItemServiceImpl implements ItemService {
         PageHelper.startPage(page, pageSize);
         List<SearchItemsVO> list = itemsMapperCustom.searchItems(map);
 
-        return setterPagedGrid(list, page);
+        return PagedGridResult.setterPagedGrid(list, page);
     }
 
     private Integer getCommentCounts(String itemId, Integer level) {
