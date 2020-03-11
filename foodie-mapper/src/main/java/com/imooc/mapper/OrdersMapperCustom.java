@@ -1,5 +1,6 @@
 package com.imooc.mapper;
 
+import com.imooc.pojo.OrderStatus;
 import com.imooc.pojo.vo.MyOrdersVO;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -21,4 +22,18 @@ public interface OrdersMapperCustom {
      * @return List<MyOrdersVO>
      */
     List<MyOrdersVO> queryMyOrders(@Param("paramsMap")Map<String, Object> map);
+
+    /**
+     * 获取订单状态的数量
+     * @param map 参数集合
+     * @return 数量
+     */
+    int getMyOrderStatusCounts(@Param("paramsMap") Map<String, Object> map);
+
+    /**
+     * 获取订单交易趋势
+     * @param map 参数集合
+     * @return List<OrderStatus>
+     */
+    List<OrderStatus> getMyOrderTrend(@Param("paramsMap") Map<String, Object> map);
 }

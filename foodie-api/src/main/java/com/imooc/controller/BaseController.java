@@ -1,7 +1,7 @@
 package com.imooc.controller;
 
 import com.imooc.pojo.Orders;
-import com.imooc.service.MyOrdersService;
+import com.imooc.service.center.MyOrdersService;
 import com.imooc.utils.JSONResult;
 import org.springframework.beans.factory.annotation.Autowired;
 
