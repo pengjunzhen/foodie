@@ -1,6 +1,9 @@
 package com.imooc.pojo.vo;
 
+import com.imooc.pojo.bo.ShopCartBO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author pengjunzhen
@@ -12,4 +15,5 @@ public class OrderVO {
 
     private String orderId;
     private MerchantOrdersVO merchantOrdersVO;
+    private List<ShopCartBO> toBeRemovedShopCartList;
 }

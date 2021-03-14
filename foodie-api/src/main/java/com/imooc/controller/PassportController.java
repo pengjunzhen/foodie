@@ -1,12 +1,11 @@
 package com.imooc.controller;
 
+import com.imooc.Constant;
 import com.imooc.pojo.Users;
+import com.imooc.pojo.bo.ShopCartBO;
 import com.imooc.pojo.vo.UserVO;
 import com.imooc.service.UserService;
-import com.imooc.utils.CookieUtils;
-import com.imooc.utils.JSONResult;
-import com.imooc.utils.JsonUtils;
-import com.imooc.utils.MD5Utils;
+import com.imooc.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 @Api(value = "注册登录", tags = {"用于注册登录的相关接口"})
 @RestController
@@ -23,6 +24,9 @@ public class PassportController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RedisOperator redisOperator;
 
     @ApiOperation(value = "用户名是否存在", notes = "用户名是否存在", httpMethod = "GET")
     @GetMapping("/usernameIsExist")
@@ -53,7 +57,7 @@ public class PassportController {
 
         // 1、判断用户名和密码必须不为空
         if (StringUtils.isBlank(username) || StringUtils.isBlank(password) ||
-        StringUtils.isBlank(confirmPwd)) {
+                StringUtils.isBlank(confirmPwd)) {
             return JSONResult.errorMsg("用户名或密码不能为空");
         }
 
@@ -73,6 +77,9 @@ public class PassportController {
 
         CookieUtils.setCookie(request, response, "user",
                 JsonUtils.objectToJson(userResult), true);
+
+        // 同步购物车数据
+        synchorizeShopcartData(userResult.getId(), request, response);
 
         return JSONResult.ok();
     }
@@ -105,17 +112,103 @@ public class PassportController {
         CookieUtils.setCookie(request, response, "user",
                 JsonUtils.objectToJson(userResult), true);
 
+        // 同步购物车数据
+        synchorizeShopcartData(userResult.getId(), request, response);
+
         return JSONResult.ok(userResult);
+    }
+
+    /**
+     * 注册登录成功后，同步cookie和redis中的购物车数据
+     */
+    private void synchorizeShopcartData(String userId, HttpServletRequest request,
+                                        HttpServletResponse response) {
+
+        /**
+         * 1. Redis中无数据，如果cookie中的购物车为空，则不做处理
+         *                 如果cookie中的购物车不为空，此时将cookie中的数据放入Redis中。
+         * 2. Redis中有数据，如果cookie中的购物车为空，则将Redis中的购物车数据覆盖本地的Cookie.
+         *                 如果cookie中的购物车不为空，
+         *                      如果cookie中的某个商品在Redis中存在， 则以Cookie为主，删除Redis中的，
+         *                      把Cookie中的商品直接覆盖Redis中（参考京东）。
+         *                      cookie中存在，Redis中不存在的商品，直接将Cookie中的数据放进去。
+         * 3. 同步到Redis中去之后，覆盖本地Cookie购物车的数据，保证本地购物车的数据是同步最新的。
+         */
+
+        // 从redis中获取购物车
+        String shopCartRedisKey = Constant.FOODIE_SHOPCART + ":" + userId;
+        String shopcartJsonRedis = redisOperator.get(shopCartRedisKey);
+
+        // 从cookie中获取购物车
+        String shopcartStrCookie = CookieUtils.getCookieValue(request, Constant.FOODIE_SHOPCART, true);
+
+        if (StringUtils.isEmpty(shopcartJsonRedis)) {
+            // redis为空，cookie不为空，直接把cookie中的数据放入redis
+            if (StringUtils.isNotEmpty(shopcartStrCookie)) {
+                redisOperator.set(shopCartRedisKey, shopcartStrCookie);
+            }
+        } else {
+            // redis不为空，cookie不为空，合并cookie和redis中购物车的商品数据（同一商品则覆盖redis）
+            if (StringUtils.isNotEmpty(shopcartStrCookie)) {
+
+                /**
+                 * 1. 已经存在的，把cookie中对应的数据量，覆盖Redis（参考京东）
+                 * 2. 该项商品标记为待删除，统一放入一个待删除的list
+                 * 3. 从cookie中清理掉所有的待删除list
+                 * 4. 合并redis和cookie中的数据
+                 * 5. 更新到Redis和Cookie中
+                 */
+                List<ShopCartBO> shopcartListRedis = JsonUtils.jsonToList(shopcartJsonRedis, ShopCartBO.class);
+                List<ShopCartBO> shopcartListCookie = JsonUtils.jsonToList(shopcartStrCookie, ShopCartBO.class);
+
+                // 定义一个待删除list
+                List<ShopCartBO> pendingDeleteList = new ArrayList<>();
+
+                for (ShopCartBO redisShopcart : shopcartListRedis) {
+                    String redisSpecId = redisShopcart.getSpecId();
+
+                    for (ShopCartBO cookieShopcart : shopcartListCookie) {
+                        String cookieSpecId = cookieShopcart.getSpecId();
+
+                        if (redisSpecId.equals(cookieSpecId)) {
+                            // 覆盖购买数量，不累加，参考京东
+                            redisShopcart.setBuyCounts(cookieShopcart.getBuyCounts());
+                            // 把cookieShopcart放入待删除列表，用于最后的删除与合并
+                            pendingDeleteList.add(cookieShopcart);
+                        }
+
+                    }
+                }
+                // 从现有cookie中删除对应的覆盖过的商品数据
+                shopcartListCookie.removeAll(pendingDeleteList);
+
+                // 合并两个list
+                shopcartListRedis.addAll(shopcartListCookie);
+                // 更新到redis和cookie
+                CookieUtils.setCookie(request, response, Constant.FOODIE_SHOPCART, JsonUtils.objectToJson(shopcartListRedis), true);
+                redisOperator.set(shopCartRedisKey, JsonUtils.objectToJson(shopcartListRedis));
+            } else {
+                // redis不为空，cookie为空，直接把redis覆盖cookie
+                CookieUtils.setCookie(request, response, Constant.FOODIE_SHOPCART, shopcartJsonRedis, true);
+            }
+
+        }
     }
 
     @ApiOperation(value = "用户退出登录", notes = "用户退出登录", httpMethod = "POST")
     @PostMapping("/logout")
     public JSONResult logout(@RequestParam String userId,
-                                  HttpServletRequest request,
-                                  HttpServletResponse response) {
+                             HttpServletRequest request,
+                             HttpServletResponse response) {
 
         // 清除用户的相关信息的cookie
         CookieUtils.deleteCookie(request, response, "user");
+
+        // 用户退出登录，清除redis中user的会话信息
+        redisOperator.del(Constant.REDIS_USER_TOKEN + ":" + userId);
+
+        // 分布式会话中需要清除用户数据
+        CookieUtils.deleteCookie(request, response, Constant.FOODIE_SHOPCART);
 
         return JSONResult.ok();
     }

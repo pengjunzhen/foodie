@@ -3,13 +3,18 @@ package com.imooc.controller;
 import com.imooc.enums.OrderStatusEnum;
 import com.imooc.enums.PayMethod;
 import com.imooc.pojo.OrderStatus;
+import com.imooc.pojo.bo.ShopCartBO;
 import com.imooc.pojo.bo.SubmitOrderBO;
 import com.imooc.pojo.vo.MerchantOrdersVO;
 import com.imooc.pojo.vo.OrderVO;
 import com.imooc.service.OrderService;
+import com.imooc.utils.CookieUtils;
 import com.imooc.utils.JSONResult;
+import com.imooc.utils.JsonUtils;
+import com.imooc.utils.RedisOperator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +24,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import springfox.documentation.spring.web.json.Json;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author pengjunzhen
@@ -41,6 +46,9 @@ public class OrdersController extends BaseController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private RedisOperator redisOperator;
+
     @ApiOperation(value = "用户下单", notes = "用户下单", httpMethod = "POST")
     @PostMapping("/create")
     public JSONResult create(@RequestBody SubmitOrderBO submitOderBO,
@@ -50,8 +58,17 @@ public class OrdersController extends BaseController {
             return JSONResult.errorMsg("不支持该支付方式");
         }
 
+        // 从Redis中检查购物车的信息
+        String shopCarRedisKey = FOODIE_SHOPCART + ":" + submitOderBO.getUserId();
+        String shopCarJsonStr = redisOperator.get(shopCarRedisKey);
+        if (StringUtils.isBlank(shopCarJsonStr)) {
+            return JSONResult.errorMsg("购物数据不正确");
+        }
+
+        List<ShopCartBO> shopCartList = JsonUtils.jsonToList(shopCarJsonStr, ShopCartBO.class);
+
         // 1. 创建订单
-        OrderVO orderVO = orderService.createOrder(submitOderBO);
+        OrderVO orderVO = orderService.createOrder(submitOderBO, shopCartList);
         String orderId = orderVO.getOrderId();
 
         // 2. 创建订单以后，移除购物车中已结算（已提交）的商品
@@ -61,8 +78,13 @@ public class OrdersController extends BaseController {
          * 3003 -> 用户购买
          * 4004
          */
-        // TODO 整合redis之后，完善购物车中的已结算商品清除，并且同步到前端的cookie
-//        CookieUtils.setCookie(request, response, FOODIE_SHOPCART, "", true);
+        // 清理覆盖现有的redis汇总的购物数据
+        shopCartList.removeAll(orderVO.getToBeRemovedShopCartList());
+        shopCarJsonStr = JsonUtils.objectToJson(shopCartList);
+        redisOperator.set(shopCarRedisKey, shopCarJsonStr);
+
+        // 整合redis之后，完善购物车中的已结算商品清除，并且同步到前端的cookie
+        CookieUtils.setCookie(request, response, FOODIE_SHOPCART, shopCarJsonStr, true);
 
         // 3. 向支付中心发送当前订单，用于保存支付中心的订单数据
         MerchantOrdersVO merchantOrdersVO = orderVO.getMerchantOrdersVO();
@@ -73,16 +95,16 @@ public class OrdersController extends BaseController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("imoocUserId","imooc");
-        headers.add("password","imooc");
+        headers.add("imoocUserId", "imooc");
+        headers.add("password", "imooc");
 
         HttpEntity<MerchantOrdersVO> entity =
                 new HttpEntity<>(merchantOrdersVO, headers);
 
         ResponseEntity<JSONResult> responseEntity =
                 restTemplate.postForEntity(paymentUrl,
-                                            entity,
-                                            JSONResult.class);
+                        entity,
+                        JSONResult.class);
         JSONResult paymentResult = responseEntity.getBody();
         assert paymentResult != null;
         if (paymentResult.getStatus() != HttpStatus.OK.value()) {
