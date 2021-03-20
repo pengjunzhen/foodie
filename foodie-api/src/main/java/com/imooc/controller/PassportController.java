@@ -9,6 +9,7 @@ import com.imooc.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +17,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Api(value = "注册登录", tags = {"用于注册登录的相关接口"})
 @RestController
 @RequestMapping("passport")
-public class PassportController {
+public class PassportController extends BaseController {
 
     @Autowired
     private UserService userService;
@@ -73,10 +75,13 @@ public class PassportController {
 
         // 4、实现注册
         Users userResult = userService.createUser(userVO);
-        userResult = setNullProperty(userResult);
+//        userResult = setNullProperty(userResult);
 
+        // 实现用户的redis会话
+        UserVO userVo = convertUserVo(userResult);
+        // 注意，这里严格意义上来讲，是需要加密存储的，这里是因为为了方便测试，所以没有加密
         CookieUtils.setCookie(request, response, "user",
-                JsonUtils.objectToJson(userResult), true);
+                JsonUtils.objectToJson(userVo), true);
 
         // 同步购物车数据
         synchorizeShopcartData(userResult.getId(), request, response);
@@ -109,8 +114,10 @@ public class PassportController {
             return JSONResult.errorMsg("用户名或密码错误");
         }
 
+        UserVO userVo = convertUserVo(userResult);
+
         CookieUtils.setCookie(request, response, "user",
-                JsonUtils.objectToJson(userResult), true);
+                JsonUtils.objectToJson(userVo), true);
 
         // 同步购物车数据
         synchorizeShopcartData(userResult.getId(), request, response);

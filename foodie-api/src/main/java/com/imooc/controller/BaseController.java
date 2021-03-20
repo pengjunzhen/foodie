@@ -1,11 +1,17 @@
 package com.imooc.controller;
 
+import com.imooc.Constant;
 import com.imooc.pojo.Orders;
+import com.imooc.pojo.Users;
+import com.imooc.pojo.vo.UserVO;
 import com.imooc.service.center.MyOrdersService;
 import com.imooc.utils.JSONResult;
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * @author pengjunzhen
@@ -43,6 +49,9 @@ public class BaseController {
     @Autowired
     public MyOrdersService myOrdersService;
 
+    @Autowired
+    private RedisOperator redisOperator;
+
     /**
      * 用于验证用户和订单是否有关联关系，避免非法用户调用
      * @return
@@ -53,5 +62,15 @@ public class BaseController {
             return JSONResult.errorMsg("订单不存在！");
         }
         return JSONResult.ok(order);
+    }
+
+    public UserVO convertUserVo(Users user) {
+        // 实现用户的redis会话
+        String uniqueToken = UUID.randomUUID().toString().trim();
+        redisOperator.set(Constant.REDIS_USER_TOKEN + ":" + user.getId(), uniqueToken);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        userVO.setUserUniqueToken(uniqueToken);
+        return userVO;
     }
 }
