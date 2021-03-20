@@ -2,7 +2,7 @@
 ## web访问端口号 约定：8088
 #############################################################
 server:
-  port: 8088
+#  port: 8088
   tomcat:
     uri-encoding: utf-8
   max-http-header-size: 80KB
@@ -16,9 +16,9 @@ spring:
   datasource: # 数据源的相关配置
     type: com.zaxxer.hikari.HikariDataSource # 数据源类型：HikariCP
     driver-class-name: com.mysql.cj.jdbc.Driver # mysql驱动
-    url: jdbc:mysql://localhost:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
+#    url: jdbc:mysql://localhost:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+#    username: root
+#    password: 123456
     hikari:
       connection-timeout: 30000 # 等待连接池分配连接的最大时长（毫秒），超过这个时长还没可用的连接则发生SQ
       minimum-idle: 5 # 最小连接数
@@ -32,19 +32,6 @@ spring:
     multipart:
       max-file-size: 1MB
       max-request-size: 1MB
-
-  redis:
-    database: 0
-    host: localhost
-    port: 6379
-    password:
-    lettuce:
-      pool:
-        max-active: 8
-        max-wait: -1ms
-        min-idle: 0
-        max-idle: 8
-
 
 
 ############################################################
