@@ -82,6 +82,17 @@ public class RedisOperator {
     }
 
     /**
+     * 实现命令：SET key value EX seconds，设置key-value和超时时间（秒）
+     *
+     * @param key
+     * @param value
+     * @param timeout （以秒为单位）
+     */
+    public void set(String key, String value, long timeout) {
+        redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+    }
+
+    /**
      * 实现命令：GET key，返回 key所关联的字符串值。
      *
      * @param key
